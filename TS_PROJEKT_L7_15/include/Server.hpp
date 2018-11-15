@@ -10,10 +10,15 @@
 #pragma warning(disable:4996) 
 
 class ServerTCP {
+private:
+	static const unsigned int bufLen = 2;
+
 	WSADATA wsaData;
 	SOCKET serverSocket;
 	sockaddr_in serverAddress;
 	std::unordered_map<unsigned int, SOCKET>clients;
+	unsigned int freeSessionId = 0;
+
 
 public:
 	ServerTCP() {
@@ -29,7 +34,7 @@ public:
 
 		if (!socketBind()) { std::cout << "bind() failed.\n"; }
 
-		if (listen(serverSocket, 1) == SOCKET_ERROR) {std::cout << "Error listening on socket.\n";}
+		if (listen(serverSocket, 1) == SOCKET_ERROR) { std::cout << "Error listening on socket.\n"; }
 	}
 
 	bool socketBind() {
@@ -43,10 +48,13 @@ public:
 	bool connectClient() {
 		const SOCKET clientSocket = accept(this->serverSocket, nullptr, nullptr);
 
-		if (clientSocket == SOCKET_ERROR) {return false; }
+		if (clientSocket == SOCKET_ERROR) { return false; }
 
-		for (unsigned int i = 0; i < ~unsigned int(0); i++) {
-			if (clients.find(i) == clients.end()) { clients[i] = clientSocket; return true; }
+		for (unsigned int i = 0; i < pow(2, 32) - 1; i++) {
+			if (clients.find(freeSessionId) == clients.end()) { clients[freeSessionId] = clientSocket; return true; }
+
+			if (freeSessionId < pow(2, 32) - 1) { freeSessionId++; }
+			else { freeSessionId = 0; }
 		}
 		return false;
 	}
@@ -60,21 +68,18 @@ public:
 
 	void sendBinProtocol(const BinProtocol& data, SOCKET paramSocket) const {
 		const unsigned int bytesSent = send(paramSocket, data.to_string().c_str(), 2, 0);
-		printf("Bytes sent: %ld\n", bytesSent);
+		std::cout << "Bytes sent: " << bytesSent << "\n";
 	}
 
 	BinProtocol receiveBinProtocol() {
 		int bytesRecv = SOCKET_ERROR;
-
-		//Odbieranie danych
-		bytesRecv = SOCKET_ERROR;
 		char* recvbuf = new char[2];
 
 		while (bytesRecv == SOCKET_ERROR) {
-			bytesRecv = recv(clients[0], recvbuf, 2, 0);
+			bytesRecv = recv(clients[0], recvbuf, bufLen, 0);
 
 			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
-				printf("Connection closed.\n");
+				std::cout << "Connection closed.\n";
 				break;
 			}
 

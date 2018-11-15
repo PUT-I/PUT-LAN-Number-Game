@@ -10,6 +10,9 @@
 #pragma warning(disable:4996) 
 
 class ClientTCP {
+private:
+	static const unsigned int BUF_LENGTH = 2;
+
 	WSADATA wsaData;
 	SOCKET clientSocket;
 	sockaddr_in clientAddress;
@@ -40,31 +43,31 @@ public:
 	}
 
 	void sendBinProtocol(const BinProtocol& data) const {
-		const unsigned int bytesSent = send(clientSocket, data.to_string().c_str(), 2, 0);
+		const unsigned int bytesSent = send(clientSocket, data.to_string().c_str(), BUF_LENGTH, 0);
 
 		std::cout << "Bytes sent: " << bytesSent << "\n";
-		std::cout << "Text sent: " << data.to_string() << "\n";
 		std::cout << "Text sent: " << data.to_string().c_str() << "\n";
 	}
 
-	BinProtocol receiveBinProtocol() const {
+	BinProtocol receiveBinProtocol() {
 		int bytesRecv = SOCKET_ERROR;
-
-		//Odbieranie danych
-		bytesRecv = SOCKET_ERROR;
 		char* recvbuf = new char[2];
 
 		while (bytesRecv == SOCKET_ERROR) {
-			bytesRecv = recv(clientSocket, recvbuf, 2, 0);
+			bytesRecv = recv(clientSocket, recvbuf, BUF_LENGTH, 0);
 
 			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
-				printf("Connection closed.\n");
+				std::cout << "Connection closed.\n";
 				break;
 			}
 
 			std::cout << "Bytes received: " << bytesRecv << "\n";
 		}
-		std::cout << "Received text: " << recvbuf << "\n";
-		return BinProtocol(std::string(recvbuf));
+
+		std::string str(recvbuf);
+		str.resize(2);
+		std::cout << "Received text: " << str << "\n";
+
+		return BinProtocol(str);
 	}
 };

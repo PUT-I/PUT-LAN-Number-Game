@@ -11,7 +11,7 @@ private:
 	std::bitset<5> padding;
 
 public:
-	explicit BinProtocol(const std::string &data) { from_string(data); }
+	explicit BinProtocol(const std::string& data) { from_string(data); }
 	explicit BinProtocol(const std::string& operation, const std::string& answer, const std::string& id) {
 		this->set(operation, answer, id);
 	}
@@ -28,14 +28,13 @@ public:
 		input.resize(5);
 		id = std::bitset<5>(input);
 	}
-	void set(const std::string& operation, const std::string& answer, const std::string& id){
+	void set(const std::string& operation, const std::string& answer, const std::string& id) {
 		this->setOperation(operation);
 		this->setAnswer(answer);
 		this->setId(id);
 	}
 
-	std::string to_string() const
-	{
+	std::string to_string() const {
 		std::bitset<8>tempBitset;
 		std::string result;
 		std::bitset<16>wholeData(std::string(operation.to_string() + answer.to_string() + id.to_string() + padding.to_string()));
@@ -48,6 +47,7 @@ public:
 		return result;
 	}
 	void from_string(std::string data) {
+		data.resize(2);
 		std::bitset<8>tempBitset;
 		std::bitset<16>wholeData;
 
@@ -63,9 +63,6 @@ public:
 		for (int i = 4; i >= 0; i--) { padding[i] = wholeData[i]; }
 	}
 	void display() const {
-		std::cout << "Operation: " << operation << '\n';
-		std::cout << "Answer: " << answer << '\n';
-		std::cout << "Id: " << id << '\n';
-		std::cout << "Padding: " << padding << '\n';
+		std::cout << operation << ' ' << answer << ' ' << id << ' ' << padding << '\n';
 	}
 };
