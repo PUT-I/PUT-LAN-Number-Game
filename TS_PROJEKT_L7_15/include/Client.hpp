@@ -1,10 +1,10 @@
-
+#pragma once
+#include <Protocol.hpp>
 #include <WS2tcpip.h>
 #include <winsock.h>
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <chrono>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
@@ -37,5 +37,34 @@ public:
 		clientAddress.sin_family = AF_INET;
 		clientAddress.sin_addr.s_addr = inet_addr(ip.c_str());
 		clientAddress.sin_port = htons(port);
+	}
+
+	void sendBinProtocol(const BinProtocol& data) const {
+		const unsigned int bytesSent = send(clientSocket, data.to_string().c_str(), 2, 0);
+
+		std::cout << "Bytes sent: " << bytesSent << "\n";
+		std::cout << "Text sent: " << data.to_string() << "\n";
+		std::cout << "Text sent: " << data.to_string().c_str() << "\n";
+	}
+
+	BinProtocol receiveBinProtocol() const {
+		int bytesRecv = SOCKET_ERROR;
+
+		//Odbieranie danych
+		bytesRecv = SOCKET_ERROR;
+		char* recvbuf = new char[2];
+
+		while (bytesRecv == SOCKET_ERROR) {
+			bytesRecv = recv(clientSocket, recvbuf, 2, 0);
+
+			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
+				printf("Connection closed.\n");
+				break;
+			}
+
+			std::cout << "Bytes received: " << bytesRecv << "\n";
+		}
+		std::cout << "Received text: " << recvbuf << "\n";
+		return BinProtocol(std::string(recvbuf));
 	}
 };
