@@ -11,11 +11,14 @@
 
 class ClientTCP {
 private:
-	static const unsigned int BUF_LENGTH = 2;
+	static const unsigned int BUF_LENGTH = BinProtocol::length;
 
 	WSADATA wsaData;
 	SOCKET clientSocket;
 	sockaddr_in clientAddress;
+
+	unsigned sessionId = 0;
+
 
 public:
 	ClientTCP() {
@@ -29,12 +32,13 @@ public:
 
 		this->addressInit("127.0.0.1", 7000);
 	}
-
-	bool connectServer() {
-		if (connect(clientSocket, reinterpret_cast<SOCKADDR*>(&clientAddress), sizeof(clientAddress)) != SOCKET_ERROR) { return true; }
-		else { return false; }
+	~ClientTCP() {
+		closesocket(clientSocket);
+		WSACleanup();
 	}
 
+
+private:
 	void addressInit(const std::string& ip, const unsigned int& port) {
 		memset(&clientAddress, 0, sizeof(clientAddress));
 		clientAddress.sin_family = AF_INET;
@@ -42,32 +46,67 @@ public:
 		clientAddress.sin_port = htons(port);
 	}
 
-	void sendBinProtocol(const BinProtocol& data) const {
+
+public:
+	bool connectServer() {
+		if (connect(clientSocket, reinterpret_cast<SOCKADDR*>(&clientAddress), sizeof(clientAddress)) != SOCKET_ERROR) {
+			BinProtocol protocol = receiveBinProtocol();
+			sessionId = protocol.getId_Int();
+			std::cout << "Session id: " << sessionId << "\n";
+			return true;
+		}
+		else { return false; }
+	}
+
+	void sendBinProtocol(BinProtocol& data) const {
+		data.setId(sessionId);
 		const unsigned int bytesSent = send(clientSocket, data.to_string().c_str(), BUF_LENGTH, 0);
 
 		std::cout << "Bytes sent: " << bytesSent << "\n";
-		std::cout << "Text sent: " << data.to_string().c_str() << "\n";
+		std::cout << "Sent protocol: "; data.display();
 	}
 
-	BinProtocol receiveBinProtocol() {
+	const BinProtocol receiveBinProtocol() const {
 		int bytesRecv = SOCKET_ERROR;
-		char* recvbuf = new char[2];
+		char* recvbuf = new char[BUF_LENGTH];
 
 		while (bytesRecv == SOCKET_ERROR) {
 			bytesRecv = recv(clientSocket, recvbuf, BUF_LENGTH, 0);
 
 			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
 				std::cout << "Connection closed.\n";
-				break;
+				return BinProtocol();
 			}
 
 			std::cout << "Bytes received: " << bytesRecv << "\n";
 		}
 
 		std::string str(recvbuf);
-		str.resize(2);
-		std::cout << "Received text: " << str << "\n";
+		str.resize(BUF_LENGTH);
+		std::cout << "Received protocol: ";
+		BinProtocol(str).display();
 
 		return BinProtocol(str);
+	}
+
+	void startGame() {
+		BinProtocol tempProt = this->receiveBinProtocol();
+
+		//Czekanie na rozpoczêcie rozgrywki
+		while (tempProt.getId_Int() != sessionId && tempProt.getOperation().to_string() != "001") {}
+
+		std::cout << "\nGame start.\n";
+		while (true) {
+			tempProt = this->receiveBinProtocol();
+			if (tempProt.getOperation().to_string() == "000") { std::cout << "ERROR\n"; break; }
+			if (tempProt.getId_Int() == sessionId && tempProt.getOperation().to_string() == "111") {
+				std::cout << "Game end.\n";
+				break;
+			}
+			if (tempProt.getId_Int() == sessionId && tempProt.getOperation().to_string() == "110") {
+				std::cout << "Time left: " << tempProt.getData_Int() << "s\n\n";
+			}
+
+		}
 	}
 };
