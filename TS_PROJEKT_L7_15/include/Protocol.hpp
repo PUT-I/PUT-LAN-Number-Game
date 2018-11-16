@@ -1,37 +1,28 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #pragma once
+#include "Defines.hpp"
 #include <bitset>
 #include <iostream>
+#include <iomanip>
 #include <string>
-/*
-   Pole operation:
- * 000 - error.
- * 001 - pocz¹tek rozgrywki.
 
- * 011 - liczba odgadniêta
- * 010 - liczba nie odgadniêta
+inline std::ostream& operator << (std::ostream& os, const tm& time) {
+	os << time.tm_hour << ':' << std::setfill('0') << std::setw(2) << time.tm_min << ':' << std::setfill('0') << std::setw(2) << time.tm_sec;
+	return os;
+}
 
- * 100 - przes³anie identyfikatora sesji (pocz¹tek sesji).
- * 101 - przes³anie danych
- * 110 - przes³anie informacji o czasie
-
- * 111 - rozgrywka zakoñczona (koniec sesji).
- */
-
-#define error "000"
-#define gameStart "001"
-
-#define numberGuessed "011"
-#define gameNotGuessed "010"
-
-#define sendId "100"
-#define sendNumber "101"
-#define sendTime "110"
-
-#define gameEnd "111"
-
+inline const tm GetCurrentTimeAndDate() {
+	time_t tt;
+	time(&tt);
+	tm timeAndDate = *localtime(&tt);
+	timeAndDate.tm_year += 1900;
+	timeAndDate.tm_mon += 1;
+	return timeAndDate;
+}
 
 class BinProtocol {
-private:
+public:
 	std::bitset<3> operation;
 	std::bitset<3> answer;
 	std::bitset<5> id;
@@ -42,15 +33,15 @@ public:
 	static const unsigned int length = 3; //D³ugoœæ protoko³u w bajtach
 
 
-	//Constructors
+	//Konstruktory
 	BinProtocol() : operation(NULL), answer(NULL), id(NULL), data(NULL) {}
 	explicit BinProtocol(const std::string& data) { from_string(data); }
-	explicit BinProtocol(const std::string& operation, const std::string& answer, const std::string& id, const unsigned int& data) {
+	explicit BinProtocol(const std::string& operation, const std::string& answer, const unsigned int& id, const unsigned int& data) {
 		this->set(operation, answer, id, data);
 	}
 
 
-	//Setters
+	//Settery
 	void setOperation(std::string input) {
 		input.resize(3);
 		operation = std::bitset<3>(input);
@@ -73,7 +64,7 @@ public:
 	}
 	void setData(const unsigned int& input) { data = std::bitset<8>(input); }
 
-	void set(const std::string& operation, const std::string& answer, const std::string& id, const unsigned int& data) {
+	void set(const std::string& operation, const std::string& answer, const unsigned int& id, const unsigned int& data) {
 		this->setOperation(operation);
 		this->setAnswer(answer);
 		this->setId(id);
@@ -81,7 +72,7 @@ public:
 	}
 
 
-	//Getters
+	//Gettery
 	const std::bitset<3>& getOperation() const { return operation; }
 
 	const std::bitset<3>& getAnswer() const { return answer; }
@@ -92,8 +83,16 @@ public:
 	const std::bitset<8>& getData() const { return data; }
 	const unsigned int getData_Int() const { return data.to_ulong(); }
 
+	//Porównywanie
+	bool compare(const std::string& operation, const std::string& answer, const unsigned int& id) const {
+		if (this->operation.to_string() != operation) { return false; }
+		if (this->answer.to_string() != answer) { return false; }
+		if (this->getId_Int() != id) { return false; }
 
-	//Other
+		return true;
+	}
+
+	//Serializacja
 	std::string to_string() const {
 		std::bitset<8>tempBitset;
 		std::string result;
@@ -140,7 +139,12 @@ public:
 		for (int i = length * 8 - startOffset; i >= 0; i--) { padding[i] = wholeData[i]; }
 	}
 
+	//Wyœwietlanie
 	void display() const {
 		std::cout << operation << ' ' << answer << ' ' << id << ' ' << data << ' ' << padding << '\n';
+	}
+	friend std::ostream& operator << (std::ostream& out, const BinProtocol& input) {
+		out << input.operation << ' ' << input.answer << ' ' << input.id << ' ' << input.data << ' ' << input.padding;
+		return out;
 	}
 };

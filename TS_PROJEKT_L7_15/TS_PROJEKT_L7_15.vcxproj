@@ -170,6 +170,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Client.hpp" />
+    <ClInclude Include="include\Defines.hpp" />
+    <ClInclude Include="include\Node.hpp" />
     <ClInclude Include="include\Protocol.hpp" />
     <ClInclude Include="include\Server.hpp" />
   </ItemGroup>

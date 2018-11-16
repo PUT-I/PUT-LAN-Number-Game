@@ -1,5 +1,5 @@
 #pragma once
-#include <Protocol.hpp>
+#include "Node.hpp"
 #include <WS2tcpip.h>
 #include <winsock.h>
 #include <iostream>
@@ -9,104 +9,64 @@
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
 
-class ClientTCP {
+class ClientTCP : public NodeTCP {
 private:
-	static const unsigned int BUF_LENGTH = BinProtocol::length;
-
-	WSADATA wsaData;
-	SOCKET clientSocket;
-	sockaddr_in clientAddress;
-
+	//Id sesji klienta
 	unsigned sessionId = 0;
 
-
+	//Kontstruktory
 public:
-	ClientTCP() {
-		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != NO_ERROR) { std::cout << "Initialization error.\n"; }
+	ClientTCP(const std::string &address, const unsigned int& port) : NodeTCP(address, port) {}
 
-		clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (clientSocket == INVALID_SOCKET) {
-			std::cout << "Error creating socket: " << WSAGetLastError() << "\n";
-			WSACleanup();
-		}
-
-		this->addressInit("127.0.0.1", 7000);
-	}
-	~ClientTCP() {
-		closesocket(clientSocket);
-		WSACleanup();
-	}
-
-
-private:
-	void addressInit(const std::string& ip, const unsigned int& port) {
-		memset(&clientAddress, 0, sizeof(clientAddress));
-		clientAddress.sin_family = AF_INET;
-		clientAddress.sin_addr.s_addr = inet_addr(ip.c_str());
-		clientAddress.sin_port = htons(port);
-	}
-
-
-public:
+	//Metody prywatne
 	bool connectServer() {
-		if (connect(clientSocket, reinterpret_cast<SOCKADDR*>(&clientAddress), sizeof(clientAddress)) != SOCKET_ERROR) {
-			BinProtocol protocol = receiveBinProtocol();
-			sessionId = protocol.getId_Int();
-			std::cout << "Session id: " << sessionId << "\n";
+		if (connect(nodeSocket, reinterpret_cast<SOCKADDR*>(&address), sizeof(address)) != SOCKET_ERROR) {
+			BinProtocol tempProt;
+			receiveBinProtocol(nodeSocket, tempProt);
+			//Sprawdzanie czy odebrany protokół dotyczy przydzielenia Id
+			if (!tempProt.compare(OP_DATA, DATA_ID, NULL)) {
+				return false;
+			}
+			else { sessionId = tempProt.getData_Int(); }
+
+			mutex.lock();
+			std::cout << GetCurrentTimeAndDate() << " : " << "Session id: " << sessionId << "\n";
+			mutex.unlock();
 			return true;
 		}
 		else { return false; }
 	}
 
-	void sendBinProtocol(BinProtocol& data) const {
-		data.setId(sessionId);
-		const unsigned int bytesSent = send(clientSocket, data.to_string().c_str(), BUF_LENGTH, 0);
-
-		std::cout << "Bytes sent: " << bytesSent << "\n";
-		std::cout << "Sent protocol: "; data.display();
-	}
-
-	const BinProtocol receiveBinProtocol() const {
-		int bytesRecv = SOCKET_ERROR;
-		char* recvbuf = new char[BUF_LENGTH];
-
-		while (bytesRecv == SOCKET_ERROR) {
-			bytesRecv = recv(clientSocket, recvbuf, BUF_LENGTH, 0);
-
-			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
-				std::cout << "Connection closed.\n";
-				return BinProtocol();
-			}
-
-			std::cout << "Bytes received: " << bytesRecv << "\n";
-		}
-
-		std::string str(recvbuf);
-		str.resize(BUF_LENGTH);
-		std::cout << "Received protocol: ";
-		BinProtocol(str).display();
-
-		return BinProtocol(str);
-	}
-
+	//Metody publiczne
 	void startGame() {
-		BinProtocol tempProt = this->receiveBinProtocol();
+		BinProtocol tempProt;
 
-		//Czekanie na rozpocz�cie rozgrywki
-		while (tempProt.getId_Int() != sessionId && tempProt.getOperation().to_string() != "001") {}
 
-		std::cout << "\nGame start.\n";
+		//Czekanie na rozpocz�cie rozgrywki
+		while (!tempProt.compare(OP_GAME, GAME_BEGIN, sessionId)) { receiveBinProtocol(nodeSocket, tempProt); }
+
+		mutex.lock();
+		std::cout << '\n' << GetCurrentTimeAndDate() << " : " << "Game start.\n";
+		mutex.unlock();
 		while (true) {
-			tempProt = this->receiveBinProtocol();
-			if (tempProt.getOperation().to_string() == "000") { std::cout << "ERROR\n"; break; }
-			if (tempProt.getId_Int() == sessionId && tempProt.getOperation().to_string() == "111") {
-				std::cout << "Game end.\n";
+			this->receiveBinProtocol(nodeSocket, tempProt);
+			//if (tempProt.getOperation().to_string() == OP_MESSAGE) { //Przerobić później
+			//	mutex.lock();
+			//	std::cout << GetCurrentTimeAndDate() << " : " << "ERROR\n";
+			//	mutex.unlock();
+			//	break;
+			//}
+			if (tempProt.compare(OP_GAME, GAME_END, sessionId)) {
+				mutex.lock();
+				std::cout << GetCurrentTimeAndDate() << " : " << "Game end.\n";
+				mutex.unlock();
 				break;
 			}
-			if (tempProt.getId_Int() == sessionId && tempProt.getOperation().to_string() == "110") {
-				std::cout << "Time left: " << tempProt.getData_Int() << "s\n\n";
+			else if (tempProt.compare(OP_DATA, DATA_TIME, sessionId)) {
+				mutex.lock();
+				std::cout << GetCurrentTimeAndDate() << " : " << "Time left: " << tempProt.getData_Int() << "s\n\n";
+				mutex.unlock();
 			}
-
 		}
 	}
 };
