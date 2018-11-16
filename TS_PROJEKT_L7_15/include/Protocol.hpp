@@ -12,7 +12,7 @@ inline std::ostream& operator << (std::ostream& os, const tm& time) {
 	return os;
 }
 
-inline const tm GetCurrentTimeAndDate() {
+inline const tm GetCurrentTimeTm() {
 	time_t tt;
 	time(&tt);
 	tm timeAndDate = *localtime(&tt);
@@ -22,7 +22,7 @@ inline const tm GetCurrentTimeAndDate() {
 }
 
 class BinProtocol {
-public:
+private:
 	std::bitset<3> operation;
 	std::bitset<3> answer;
 	std::bitset<5> id;
@@ -105,6 +105,13 @@ public:
 		return result;
 	}
 
+	void from_char_a(const char* input){
+		std::string inputStr(length, NULL);
+		for(unsigned int i = 0; i < length;i++){
+			inputStr[i] = input[i];
+		}
+		from_string(inputStr);
+	}
 	void from_string(std::string input) {
 		input.resize(length);
 		std::bitset<length * 8>wholeData;

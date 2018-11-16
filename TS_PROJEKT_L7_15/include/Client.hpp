@@ -4,7 +4,6 @@
 #include <winsock.h>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
@@ -25,13 +24,12 @@ public:
 			receiveBinProtocol(nodeSocket, tempProt);
 			//Sprawdzanie czy odebrany protokół dotyczy przydzielenia Id
 			if (!tempProt.compare(OP_DATA, DATA_ID, NULL)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Session id not received.\n";
 				return false;
 			}
 			else { sessionId = tempProt.getData_Int(); }
 
-			mutex.lock();
-			std::cout << GetCurrentTimeAndDate() << " : " << "Session id: " << sessionId << "\n";
-			mutex.unlock();
+			std::cout << GetCurrentTimeTm() << " : " << "Session id: " << sessionId << "\n";
 			return true;
 		}
 		else { return false; }
@@ -42,30 +40,52 @@ public:
 		BinProtocol tempProt;
 
 
-		//Czekanie na rozpocz�cie rozgrywki
-		while (!tempProt.compare(OP_GAME, GAME_BEGIN, sessionId)) { receiveBinProtocol(nodeSocket, tempProt); }
+		//Czekanie na uzyskanie informacji o czasie rozgrywki
+		while (!tempProt.compare(OP_TIME, TIME_DURATION, sessionId)) {
+			receiveBinProtocol(nodeSocket, tempProt);
+			if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Server disconnected.\n";
+				return;
+			}
+		}
+		std::cout << '\n' << GetCurrentTimeTm() << " : " << "Game duration: " << tempProt.getData_Int() << "s\n";
+		std::cerr << "(err)" << GetCurrentTimeTm() << " : " << "Game duration: " << tempProt.getData_Int() << "s\n";
 
-		mutex.lock();
-		std::cout << '\n' << GetCurrentTimeAndDate() << " : " << "Game start.\n";
-		mutex.unlock();
+		//Czekanie na rozpoczęcie rozgrywki
+		while (!tempProt.compare(OP_GAME, GAME_BEGIN, sessionId)) {
+			receiveBinProtocol(nodeSocket, tempProt);
+			if (tempProt.compare(OP_TIME, TIME_TO_START, sessionId)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Time to start: " << tempProt.getData_Int() << "s\n";
+				std::cerr << "(err)" << GetCurrentTimeTm() << " : " << "Time to start: " << tempProt.getData_Int() << "s\n";
+			}
+			else if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Server disconnected.\n";
+				return;
+			}
+			else if (tempProt.compare(OP_MESSAGE, MESSAGE_OPPONENT_DISCONNECTED, sessionId)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Opponent disconnected.\n";
+				return;
+			}
+		}
+
+		std::cout << GetCurrentTimeTm() << " : " << "Game start.\n\n";
 		while (true) {
 			this->receiveBinProtocol(nodeSocket, tempProt);
-			//if (tempProt.getOperation().to_string() == OP_MESSAGE) { //Przerobić później
-			//	mutex.lock();
-			//	std::cout << GetCurrentTimeAndDate() << " : " << "ERROR\n";
-			//	mutex.unlock();
-			//	break;
-			//}
-			if (tempProt.compare(OP_GAME, GAME_END, sessionId)) {
-				mutex.lock();
-				std::cout << GetCurrentTimeAndDate() << " : " << "Game end.\n";
-				mutex.unlock();
+			if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Server disconnected.\n";
+				return;
+			}
+			else if (tempProt.compare(OP_MESSAGE, MESSAGE_OPPONENT_DISCONNECTED, sessionId)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Opponent disconnected.\n";
+				return;
+			}
+			else if (tempProt.compare(OP_GAME, GAME_END, sessionId)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Game end.\n";
 				break;
 			}
-			else if (tempProt.compare(OP_DATA, DATA_TIME, sessionId)) {
-				mutex.lock();
-				std::cout << GetCurrentTimeAndDate() << " : " << "Time left: " << tempProt.getData_Int() << "s\n\n";
-				mutex.unlock();
+			else if (tempProt.compare(OP_TIME, TIME_LEFT, sessionId)) {
+				std::cout << GetCurrentTimeTm() << " : " << "Time left: " << tempProt.getData_Int() << "s\n\n";
+				std::cerr << "(err)" << GetCurrentTimeTm() << " : " << "Time left: " << tempProt.getData_Int() << "s\n\n";
 			}
 		}
 	}
