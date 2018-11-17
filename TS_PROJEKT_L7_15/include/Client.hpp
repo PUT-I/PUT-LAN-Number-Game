@@ -163,5 +163,6 @@ public:
 			this->sendBinProtocol(BinProtocol(OP_DATA, DATA_NUMBER, sessionId, number), nodeSocket);
 		}
 		listener.join();
+		shutdown(nodeSocket, 2);
 	}
 };

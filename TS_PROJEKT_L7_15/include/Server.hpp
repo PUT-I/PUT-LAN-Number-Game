@@ -74,18 +74,12 @@ public:
 		return false;
 	}
 
-	void sendBinProtocolToAll(const BinProtocol &data) {
-		std::vector<std::thread>threads;
-		std::vector<BinProtocol>dataVec;
-		mutex.lock();
+	void sendBinProtocolToAll(BinProtocol data) {
 		for (const unsigned int id : sessionIds) {
-			dataVec.push_back(data);
-			(dataVec.end() - 1)->setId(id);
-			threads.push_back(std::thread(&ServerTCP::sendBinProtocol, this, std::ref(*(dataVec.end() - 1)), std::ref(clientSockets[id])));
+			data.setId(id);
+			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Sent to session " << id << "\n";
+			this->sendBinProtocol(data, clientSockets[id]);
 		}
-		for (std::thread& thread : threads) { thread.join(); }
-		mutex.unlock();
-		dataVec.clear();
 	}
 
 	void receiveBinProtocols(BinProtocol& output, SOCKET& clientSocket, bool& stop) {
@@ -133,8 +127,6 @@ public:
 
 		//Uruchamianie w¹tków odbierania
 		{
-			mutex.lock();
-			mutex.unlock();
 			threads[0] = std::thread([this, &inputs, &stop] {this->receiveBinProtocols(inputs[0], clientSockets[sessionIds[0]], stop); });
 			threads[1] = std::thread([this, &inputs, &stop] {this->receiveBinProtocols(inputs[1], clientSockets[sessionIds[1]], stop); });
 		}
@@ -152,8 +144,6 @@ public:
 				sync_cerr << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";
 				sync_cout << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";
 				this->sendBinProtocolToAll(BinProtocol(OP_TIME, TIME_TO_START, NULL, i));
-				mutex.lock();
-				mutex.unlock();
 				Sleep(1000);
 			}
 			sync_cerr << '\n';
@@ -165,16 +155,12 @@ public:
 			sync_cerr << GetCurrentTimeTm() << " : " << "Game start.\n";
 			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Send game start info to players.\n";
 			this->sendBinProtocolToAll(BinProtocol(OP_GAME, GAME_BEGIN, NULL, NULL));
-			mutex.lock();
-			mutex.unlock();
 
 			//Wys³anie wiadomoœci o czasie
 			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Send time to players.\n";
 			sync_cerr << GetCurrentTimeTm() << " : " << "Time left: " << gameDuration << "s\n";
 			sync_cout << GetCurrentTimeTm() << " : " << "Time left: " << gameDuration << "s\n";
 			this->sendBinProtocolToAll(BinProtocol(OP_TIME, TIME_LEFT, NULL, gameDuration));
-			mutex.lock();
-			mutex.unlock();
 		}
 
 		//Zmienne do zarz¹dzania rozgrywk¹
@@ -262,7 +248,7 @@ public:
 		//£¹czenie w¹tków odbierania
 		for (std::thread& thread : threads) {
 			thread.join();
-			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Client  receive end.\n";
+			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Client connection end.\n";
 		}
 	}
 };

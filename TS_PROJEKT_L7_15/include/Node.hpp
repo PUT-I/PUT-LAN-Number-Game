@@ -48,7 +48,7 @@ public:
 	}
 
 	//Metody publiczne
-	void sendBinProtocol(const BinProtocol data, SOCKET& clientSocket) {
+	void sendBinProtocol(const BinProtocol &data, SOCKET& clientSocket) const {
 		const std::string sendStr = data.to_string();
 		char sendBuf[BUF_LENGTH];
 		for (unsigned int i = 0; i < BUF_LENGTH; i++) {
@@ -63,7 +63,7 @@ public:
 		sync_cerr << '\n';
 	}
 
-	void receiveBinProtocol(const SOCKET &paramSocket, BinProtocol& output) {
+	void receiveBinProtocol(const SOCKET &paramSocket, BinProtocol& output) const {
 		int bytesRecv = SOCKET_ERROR;
 		char recvBuf [BUF_LENGTH];
 
