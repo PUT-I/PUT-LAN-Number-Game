@@ -1,7 +1,6 @@
 
 #include "Defines.hpp"
 #include <bitset>
-#include <iostream>
 #include <string>
 
 inline std::ostream& operator << (std::ostream& os, const tm& time) {

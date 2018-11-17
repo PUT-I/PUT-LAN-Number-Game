@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Node.hpp"
-#include <WS2tcpip.h>
-#include <winsock.h>
 
-#include <string>
 #include <unordered_map>
 #include <thread>
 #include <random>
@@ -71,6 +68,7 @@ public:
 				return true;
 			}
 		}
+		mutex.unlock();
 		return false;
 	}
 
