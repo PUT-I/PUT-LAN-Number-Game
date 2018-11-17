@@ -2,10 +2,10 @@
 
 #include "Node.hpp"
 
-#include <unordered_map>
 #include <thread>
 #include <random>
 #include <chrono>
+#include <unordered_map>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
@@ -52,6 +52,7 @@ public:
 
 	//Metody publiczne
 	bool acceptClient() {
+		this->sendBinProtocolToAll(BinProtocol(OP_MESSAGE, MESSAGE_WAITING_FOR_OPPONENT, NULL, NULL));
 		SOCKET clientSocket = accept(this->nodeSocket, nullptr, nullptr);
 
 		if (clientSocket == SOCKET_ERROR) { return false; }
@@ -67,8 +68,8 @@ public:
 				mutex.unlock();
 				return true;
 			}
+			mutex.unlock();
 		}
-		mutex.unlock();
 		return false;
 	}
 
@@ -136,7 +137,6 @@ public:
 
 		//Odliczanie do pocz¹tku rozgrywki
 		{
-			sync_cerr << '\n';
 			for (unsigned int i = 5; i > 0; i--) {
 				if (stop) { break; }
 				sync_cerr << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";
@@ -144,6 +144,7 @@ public:
 				this->sendBinProtocolToAll(BinProtocol(OP_TIME, TIME_TO_START, NULL, i));
 				Sleep(1000);
 			}
+			sync_cout << '\n';
 			sync_cerr << '\n';
 		}
 
@@ -198,14 +199,14 @@ public:
 
 						if (tempNumber > secretNumber) {
 							sync_cout << GetCurrentTimeTm() << " : " << "Sent message 'NUMBER TOO BIG' to session " << sessionIds[i] << "\n";
-							sendBinProtocol(BinProtocol(OP_NUMBER, NUMBER_TOO_BIG, sessionIds[i], NULL), clientSockets[sessionIds[i]]);
+							sendBinProtocol(BinProtocol(OP_NUMBER, NUMBER_TOO_BIG, sessionIds[i], tempNumber), clientSockets[sessionIds[i]]);
 						}
 						else if (tempNumber == secretNumber) {
 							wins[i] = true;
 						}
 						else if (tempNumber < secretNumber) {
 							sync_cout << GetCurrentTimeTm() << " : " << "Sent message 'NUMBER TOO SMALL' to session " << sessionIds[i] << "\n";
-							sendBinProtocol(BinProtocol(OP_NUMBER, NUMBER_TOO_SMALL, sessionIds[i], NULL), clientSockets[sessionIds[i]]);
+							sendBinProtocol(BinProtocol(OP_NUMBER, NUMBER_TOO_SMALL, sessionIds[i], tempNumber), clientSockets[sessionIds[i]]);
 						}
 					}
 				}

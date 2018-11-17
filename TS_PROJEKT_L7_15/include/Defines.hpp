@@ -5,6 +5,7 @@
  *	000 - Komunikat:
  *		000 - nadawca roz³¹czony
  *		001 - przeciwnik roz³¹czony
+ *		010 - czekanie na przeciwnika
  *
  *	001 - Rozgrywka:
  *		000 - pocz¹tek rozgrywki
@@ -38,8 +39,9 @@
 
 //Komunikaty
 
-#define MESSAGE_SENDER_DISCONNECTED "000"   //Nadawca roz³¹czony
+#define MESSAGE_SENDER_DISCONNECTED   "000" //Nadawca roz³¹czony
 #define MESSAGE_OPPONENT_DISCONNECTED "001" //Przecwnik roz³¹czony
+#define MESSAGE_WAITING_FOR_OPPONENT  "001" //Przecwnik roz³¹czony
 
 
 //Rozgrywka

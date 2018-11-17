@@ -1,6 +1,5 @@
 #pragma once
 #include "Node.hpp"
-#include <array>
 #include "Console.hpp"
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -25,7 +24,7 @@ private:
 		return true;
 	}
 
-	void listenForServerMessages(BinProtocol& tempProt, bool& stop) {
+	void listenForServerMessages(BinProtocol& tempProt, bool& stop) const {
 		while (!stop) {
 			this->receiveBinProtocol(nodeSocket, tempProt);
 			if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
@@ -50,33 +49,33 @@ private:
 			}
 			else if (tempProt.compare(OP_TIME, TIME_LEFT, sessionId)) {
 				if (tempProt.getData_Int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				std::cout << '\n'<<GetCurrentTimeTm() << " : " << "Time left: " << tempProt.getData_Int() << "s\n\n";
-				sync_cerr << GetCurrentTimeTm() << " : " << "Time left: " << tempProt.getData_Int() << "s\n\n";
+				std::cout << '\n' << GetCurrentTimeTm() << " : " << "TIME LEFT: " << tempProt.getData_Int() << "s\n\n";
+				sync_cerr << GetCurrentTimeTm() << " : " << "TIME LEFT: " << tempProt.getData_Int() << "s\n\n";
 				sync_cout << GetCurrentTimeTm() << " : " << "Enter number: " << userInput;
 			}
 			else if (tempProt.compare(OP_NUMBER, NUMBER_TOO_BIG, sessionId)) {
-				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Number too big. Try again.\n";
-				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Number too big. Try again.\n";
+				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Number " << tempProt.getData_Int() << " is too big. Try again.\n";
+				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Number " << tempProt.getData_Int() << " is too big. Try again.\n";
 				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Enter number: ";
 			}
 			else if (tempProt.compare(OP_NUMBER, NUMBER_TOO_SMALL, sessionId)) {
-				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Number too small. Try again.\n";
-				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Number too small. Try again.\n";
+				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Number " << tempProt.getData_Int() << " is too small. Try again.\n";
+				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Number " << tempProt.getData_Int() << " is too small. Try again.\n";
 				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Enter number: ";
 			}
 			else if (tempProt.compare(OP_GAME, GAME_DRAW, sessionId)) {
 				if (tempProt.getData_Int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "No one won the game.\n";
-				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "No one won the game.\n";
+				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "NO ONE WON THE GAME.\n";
+				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "NO ONE WON THE GAME.\n";
 			}
 			else if (tempProt.compare(OP_GAME, GAME_WON, sessionId)) {
-				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "You won the game.\n";
-				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "You won the game.\n";
+				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "YOU WON THE GAME.\n";
+				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "YOU WON THE GAME.\n";
 			}
 			else if (tempProt.compare(OP_GAME, GAME_LOST, sessionId)) {
 				if (tempProt.getData_Int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "You lost the game.\n";
-				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "You lost the game.\n";
+				sync_cout << '\n' << GetCurrentTimeTm() << " : " << "YOU LOST THE GAME.\n";
+				sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "YOU LOST THE GAME.\n";
 			}
 		}
 	}
@@ -113,14 +112,19 @@ public:
 		while (!tempProt.compare(OP_TIME, TIME_DURATION, sessionId)) {
 			receiveBinProtocol(nodeSocket, tempProt);
 			if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
+				sync_cout << GetCurrentTimeTm() << " : " << "Server disconnected.\n";
 				sync_cerr << GetCurrentTimeTm() << " : " << "Server disconnected.\n";
 				return;
+			}
+			else if (tempProt.compare(OP_MESSAGE,MESSAGE_WAITING_FOR_OPPONENT,sessionId)){
+				sync_cout << GetCurrentTimeTm() << " : " << "Waiting for opponent.\n\n";
+				sync_cerr << GetCurrentTimeTm() << " : " << "Waiting for opponent.\n\n";
 			}
 		}
 		gameDuration = tempProt.getData_Int();
 		sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Game duration: " << gameDuration << "s\n";
 		sync_cout << GetCurrentTimeTm() << " : " << "Game duration: " << tempProt.getData_Int() << "s\n";
-		sync_cout << GetCurrentTimeTm() << " : " << "You can only enter positive numbers lesser than 255.\n\n";
+		sync_cout << GetCurrentTimeTm() << " : " << "You can only enter positive numbers lesser than 256.\n\n";
 
 		//Czekanie na rozpoczęcie rozgrywki
 		while (!tempProt.compare(OP_GAME, GAME_BEGIN, sessionId)) {
@@ -148,7 +152,7 @@ public:
 		while (!stop) {
 			//Podawanie liczby
 			while (!stop) {
-				INPUT_STRING(userInput, 3);
+				CONSOLE_MANIP::INPUT_STRING(userInput, 3);
 				if (stop) { break; }
 
 				//Dobre dane
@@ -158,7 +162,7 @@ public:
 					break;
 				}
 				else {
-					sync_cout << GetCurrentTimeTm() << " : " << "Bad input. Enter number: ";
+					sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Bad input. Enter number: ";
 					userInput.clear();
 				}
 			}
