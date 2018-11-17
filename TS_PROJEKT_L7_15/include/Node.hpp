@@ -1,9 +1,9 @@
 #pragma once
 
+#include "ThreadSafe.hpp"
 #include "Protocol.hpp"
 #include <WS2tcpip.h>
 #include <winsock.h>
-#include <mutex>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
@@ -31,16 +31,12 @@ protected:
 public:
 	NodeTCP(const std::string &address, const unsigned int& port) {
 		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != NO_ERROR) {
-			mutex.lock();
-			std::cout << GetCurrentTimeTm() << " : " << "Error creating socket: " << "Initialization error.\n";
-			mutex.unlock();
+			sync_cerr << GetCurrentTimeTm() << " : " << "Error creating socket: " << "Initialization error.\n";
 		}
 
 		nodeSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (nodeSocket == INVALID_SOCKET) {
-			mutex.lock();
-			std::cout << GetCurrentTimeTm() << " : " << "Error creating socket: " << WSAGetLastError() << "\n";
-			mutex.unlock();
+			sync_cerr << GetCurrentTimeTm() << " : " << "Error creating socket: " << WSAGetLastError() << "\n";
 			WSACleanup();
 		}
 
@@ -54,49 +50,39 @@ public:
 	//Metody publiczne
 	void sendBinProtocol(const BinProtocol data, SOCKET& clientSocket) {
 		const std::string sendStr = data.to_string();
-		char* sendBuf = new char[BUF_LENGTH];
+		char sendBuf[BUF_LENGTH];
 		for (unsigned int i = 0; i < BUF_LENGTH; i++) {
 			sendBuf[i] = sendStr[i];
 		}
 
 		const unsigned int bytesSent = send(clientSocket, sendBuf, BUF_LENGTH, 0);
-		mutex.lock();
-		std::cout << GetCurrentTimeTm() << " : " << "Bytes sent: " << bytesSent << "\n";
-		std::cout << GetCurrentTimeTm() << " : " << "Sent protocol: " << data << '\n';
-		std::cout << GetCurrentTimeTm() << " : " << "Sent bits: ";
-		for (unsigned int i = 0; i < BUF_LENGTH; i++) { std::cout << std::bitset<8>(sendBuf[i]) << (i < BUF_LENGTH - 1 ? " " : ""); }
-		std::cout << '\n';
-		mutex.unlock();
+		sync_cerr << GetCurrentTimeTm() << " : " << "Bytes sent: " << bytesSent << "\n";
+		sync_cerr << GetCurrentTimeTm() << " : " << "Sent protocol: " << data << '\n';
+		sync_cerr << GetCurrentTimeTm() << " : " << "Sent bits: ";
+		for (unsigned int i = 0; i < BUF_LENGTH; i++) { sync_cerr << std::bitset<8>(sendBuf[i]) << (i < BUF_LENGTH - 1 ? " " : ""); }
+		sync_cerr << '\n';
 	}
 
 	void receiveBinProtocol(const SOCKET &paramSocket, BinProtocol& output) {
 		int bytesRecv = SOCKET_ERROR;
-		char* recvBuf = new char[BUF_LENGTH];
+		char recvBuf [BUF_LENGTH];
 
 		while (bytesRecv == SOCKET_ERROR) {
-			mutex.lock();
 			bytesRecv = recv(paramSocket, recvBuf, BUF_LENGTH, 0);
-			mutex.unlock();
 
 			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
-				mutex.lock();
-				std::cout << GetCurrentTimeTm() << " : " << "Connection closed.\n";
+				sync_cerr << GetCurrentTimeTm() << " : " << "Connection closed.\n";
 				output = BinProtocol();
-				mutex.unlock();
 				return;
 			}
-			mutex.lock();
-			std::cout << GetCurrentTimeTm() << " : " << "Bytes received: " << bytesRecv << "\n";
-			mutex.unlock();
+			sync_cerr << GetCurrentTimeTm() << " : " << "Bytes received: " << bytesRecv << "\n";
 		}
 
 
-		mutex.lock();
 		output.from_char_a(recvBuf);
-		std::cout << GetCurrentTimeTm() << " : " << "Received protocol: " << output << '\n';
-		std::cout << GetCurrentTimeTm() << " : " << "Received bits: ";
-		for (unsigned int i = 0; i < BUF_LENGTH; i++) { std::cout << std::bitset<8>(recvBuf[i]) << (i < BUF_LENGTH - 1 ? " " : ""); }
-		std::cout << '\n';
-		mutex.unlock();
+		sync_cerr << GetCurrentTimeTm() << " : " << "Received protocol: " << output << '\n';
+		sync_cerr << GetCurrentTimeTm() << " : " << "Received bits: ";
+		for (unsigned int i = 0; i < BUF_LENGTH; i++) { sync_cerr << std::bitset<8>(recvBuf[i]) << (i < BUF_LENGTH - 1 ? " " : ""); }
+		sync_cerr << '\n';
 	}
 };
