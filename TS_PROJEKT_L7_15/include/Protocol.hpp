@@ -20,35 +20,37 @@ inline const tm GetCurrentTimeTm() {
 
 class BinProtocol {
 private:
-	std::bitset<3> operation;
-	std::bitset<3> answer;
-	std::bitset<5> id;
-	std::bitset<8> data;
-	std::bitset<5> padding{ NULL };
+	std::bitset<3> operation;		//Pole operacji
+	std::bitset<3> answer;			//Pole odpowiedzi
+	std::bitset<5> id;				//Pole identyfikatora sesji
+	std::bitset<8> data;			//Pole danych
+	std::bitset<5> padding{ NULL }; //Pole dope³nienia
 
 public: static const unsigned int length = 3; //D³ugoœæ protoko³u w bajtach
 private:
-	//Metody prywatne
+	//Desetializacja ca³ego ci¹gu bitów na poszczególne pola
 	void deserialize(const std::bitset<length * 8>& wholeData) {
+		//Pole operacji
 		int startOffset = 1;
 		int endOffset = operation.size();
 		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { operation[i - (length * 8 - endOffset)] = wholeData[i]; }
 
+		//Pole odpowiedzi
 		startOffset += operation.size();
 		endOffset = startOffset + answer.size() - 1;
 		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { answer[i - (length * 8 - endOffset)] = wholeData[i]; }
 
-
+		//Pole identyfikatora sesji
 		startOffset += answer.size();
 		endOffset = startOffset + id.size() - 1;
 		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { id[i - (length * 8 - endOffset)] = wholeData[i]; }
 
-
+		//Pole danych
 		startOffset += id.size();
 		endOffset = startOffset + data.size() - 1;
 		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { data[i - (length * 8 - endOffset)] = wholeData[i]; }
 
-
+		//Pole dope³nienia
 		startOffset += data.size();
 		for (int i = length * 8 - startOffset; i >= 0; i--) { padding[i] = wholeData[i]; }
 	}
@@ -110,12 +112,11 @@ public:
 		if (this->operation.to_string() != operation) { return false; }
 		if (this->answer.to_string() != answer) { return false; }
 		if (this->getId_Int() != id) { return false; }
-
 		return true;
 	}
 
 	//Serializacja
-	std::string to_string() const {
+	std::string to_string() const { //Zamiana na std::string
 		std::bitset<8>tempBitset;
 		std::string result;
 		std::bitset<length * 8>wholeData(std::string(operation.to_string() + answer.to_string() + id.to_string() + data.to_string() + padding.to_string()));
@@ -127,7 +128,8 @@ public:
 		return result;
 	}
 
-	void from_char_a(const char* input) {
+	//Deserializacja
+	void from_char_a(const char* input) { 
 		std::bitset<length * 8>wholeData;
 		for (unsigned int i = 0; i < length; i++) {
 			std::bitset<8>tempBitset(input[i]);

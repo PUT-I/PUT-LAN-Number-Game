@@ -2,8 +2,7 @@
 
 #include "ThreadSafe.hpp"
 #include "Protocol.hpp"
-#include <WS2tcpip.h>
-#include <winsock.h>
+#include <winsock2.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
@@ -15,22 +14,22 @@ protected:
 
 	WSADATA wsaData;
 	SOCKET nodeSocket;
-	sockaddr_in address;
+	sockaddr_in nodeInfo;
 
 	std::mutex mutex;
 
-	//Metody prywatne
-	void addressInit(const std::string& ip, const unsigned int& port) {
-		memset(&address, 0, sizeof(address));
-		address.sin_family = AF_INET;
-		address.sin_addr.s_addr = inet_addr(ip.c_str());
-		address.sin_port = htons(port);
+public:
+	//Metody inicjalizacyjne
+	void infoInit(const unsigned long& address, const unsigned int& port) {
+		memset(&nodeInfo, 0, sizeof(nodeInfo));
+		nodeInfo.sin_family = AF_INET;
+		nodeInfo.sin_addr.s_addr = address;
+		nodeInfo.sin_port = htons(port);
 	}
 
 	//Konstruktory
-public:
-	NodeTCP(const std::string &address, const unsigned int& port) {
-		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != NO_ERROR) {
+	NodeTCP() {
+		if (WSAStartup(0x0101, &wsaData) != NO_ERROR) {
 			sync_cerr << GetCurrentTimeTm() << " : " << "Error creating socket: " << "Initialization error.\n";
 		}
 
@@ -39,8 +38,9 @@ public:
 			sync_cerr << GetCurrentTimeTm() << " : " << "Error creating socket: " << WSAGetLastError() << "\n";
 			WSACleanup();
 		}
-
-		this->addressInit(address, port);
+	}
+	NodeTCP(const unsigned long& address, const unsigned int& port) : NodeTCP() {
+		this->infoInit(address, port);
 	}
 	virtual ~NodeTCP() {
 		closesocket(nodeSocket);
@@ -65,7 +65,7 @@ public:
 
 	void receiveBinProtocol(const SOCKET &paramSocket, BinProtocol& output) const {
 		int bytesRecv = SOCKET_ERROR;
-		char recvBuf [BUF_LENGTH];
+		char recvBuf[BUF_LENGTH];
 
 		while (bytesRecv == SOCKET_ERROR) {
 			bytesRecv = recv(paramSocket, recvBuf, BUF_LENGTH, 0);

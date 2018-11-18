@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <mutex>
 
+//Bezpieczny dla wielu w¹tków std::cout
 class syncCout {
 private:
 	std::mutex mutex;
@@ -31,6 +32,7 @@ public:
 	}
 };
 
+//Bezpieczny dla wielu w¹tków std::cerr
 class syncCerr {
 private:
 	std::mutex mutex;
@@ -56,5 +58,6 @@ public:
 	}
 };
 
+//Statyczne obiekty do u¿ywacia zamiast std::cout i std::cerr
 static syncCout sync_cout;
 static syncCerr sync_cerr;

@@ -28,8 +28,9 @@ private:
 
 	//Metody prywatne
 	bool socketBind() {
-		if (bind(nodeSocket, reinterpret_cast<SOCKADDR*>(&address), sizeof(address)) == SOCKET_ERROR) {
+		if (bind(nodeSocket, (SOCKADDR*)&nodeInfo, sizeof(nodeInfo)) == SOCKET_ERROR) {
 			closesocket(nodeSocket);
+			sync_cerr << GetCurrentTimeTm() << " : " << "Socket binding failed with error code : " << WSAGetLastError << '\n';
 			return false;
 		}
 		return true;
@@ -37,10 +38,12 @@ private:
 
 	//Konstruktory
 public:
-	ServerTCP(const std::string &address, const unsigned int& port) : NodeTCP(address, port) {
-		if (!socketBind()) { sync_cerr << GetCurrentTimeTm() << " : " << "bind() failed.\n"; }
+	ServerTCP(const unsigned long& address, const unsigned int& port) : NodeTCP(address, port) {
+		if (!socketBind()) { exit(0); }
 
-		if (listen(nodeSocket, 1) == SOCKET_ERROR) { sync_cerr << GetCurrentTimeTm() << " : " << "Error listening on socket.\n"; }
+		if (listen(nodeSocket, 2) == SOCKET_ERROR) {
+			sync_cerr << GetCurrentTimeTm() << " : " << "Error listening on socket.\n";
+		}
 	}
 	virtual ~ServerTCP() {
 		//Zamykanie gniazdek klientów
@@ -57,9 +60,11 @@ public:
 
 		if (clientSocket == SOCKET_ERROR) { return false; }
 
+		//Szukanie wolnego identyfikatora sesji dla klienta (zwrócenie prawdy jeœli znaleziony)
 		for (unsigned int i = 0; i < pow(2, 5) - 1; i++) {
 			mutex.lock();
 			const unsigned int sessionId = randInt(1, int(pow(2, 5) - 1));
+			//Jeœli identyfikator nie jest zajêty to przypisanie klientowi
 			if (clientSockets.find(sessionId) == clientSockets.end()) {
 				sync_cout << GetCurrentTimeTm() << " : " << "Session id: " << sessionId << "\n";
 				clientSockets[sessionId] = clientSocket;
@@ -70,6 +75,7 @@ public:
 			}
 			mutex.unlock();
 		}
+		//Zwrócenia fa³szu jeœli nie znaleziony wolny identyfikator sesji
 		return false;
 	}
 
@@ -81,16 +87,19 @@ public:
 		}
 	}
 
+	//Funkcja u¿yta do odbierania transmisji od klientów na wielu w¹tkach
 	void receiveBinProtocols(BinProtocol& output, SOCKET& clientSocket, bool& stop) {
 		char* recvBuf = new char[BUF_LENGTH];
 
+		//Pêtla odbierania wiadomoœci
+		//Zatrzymuje siê gdy rozgrywka zostanie zakoñczona/przerwana
 		while (!stop) {
 			const int bytesRecv = recv(clientSocket, recvBuf, BUF_LENGTH, 0);
 			if (bytesRecv <= 0 || bytesRecv == WSAECONNRESET) {
 				for (unsigned int i = 0; i < sessionIds.size(); i++) {
 					if (clientSockets[sessionIds[i]] == clientSocket) {
-						sync_cerr << GetCurrentTimeTm() << " : " << "Client " << i + 1 << " (id " << sessionIds[i] << ") disconnected.\n";
-						sync_cout << GetCurrentTimeTm() << " : " << "Client " << i + 1 << " (id " << sessionIds[i] << ") disconnected.\n";
+						sync_cout << GetCurrentTimeTm() << " : " << "Client " << i + 1 << " (id " << std::setfill('0') << std::setw(2) << sessionIds[i] << ") disconnected.\n";
+						sync_cerr << GetCurrentTimeTm() << " : " << "Client " << i + 1 << " (id " << std::setfill('0') << std::setw(2) << sessionIds[i] << ") disconnected.\n";
 						sessionIds.erase(sessionIds.begin() + i);
 					}
 				}
@@ -106,8 +115,6 @@ public:
 			for (unsigned int i = 0; i < BUF_LENGTH; i++) { sync_cerr << std::bitset<8>(recvBuf[i]) << (i < BUF_LENGTH - 1 ? " " : ""); }
 			sync_cerr << '\n';
 		}
-
-
 	}
 
 	//Rozgrywka
@@ -115,8 +122,8 @@ public:
 		//Obliczenie czasu rozgrywki
 		const unsigned int gameDuration = (abs(int(sessionIds[0] - sessionIds[1])) * 74) % 90 + 25;
 
-		sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Game duration: " << gameDuration << "s\n";
-		sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Game duration: " << gameDuration << "s\n";
+		sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "GAME DURATION: " << gameDuration << "s\n";
+		sync_cout << '\n' << GetCurrentTimeTm() << " : " << "GAME DURATION: " << gameDuration << "s\n";
 		this->sendBinProtocolToAll(BinProtocol(OP_TIME, TIME_DURATION, NULL, gameDuration));
 
 		//Zmienne do zarz¹dzania w¹tkami
@@ -132,12 +139,12 @@ public:
 
 		//Wygenerowanie losowej liczby
 		const unsigned int secretNumber = randInt(0, int(pow(2, 8)) - 1);
-		sync_cout << GetCurrentTimeTm() << " : " << "Secret number: " << secretNumber << "\n\n";
-		sync_cerr << GetCurrentTimeTm() << " : " << "Secret number: " << secretNumber << "\n\n";
+		sync_cout << '\n' << GetCurrentTimeTm() << " : " << "SECRET NUMBER: " << secretNumber << "\n\n";
+		sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "SECRET NUMBER: " << secretNumber << "\n\n";
 
 		//Odliczanie do pocz¹tku rozgrywki
 		{
-			for (unsigned int i = 5; i > 0; i--) {
+			for (unsigned int i = 10; i > 0; i--) {
 				if (stop) { break; }
 				sync_cerr << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";
 				sync_cout << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";
@@ -214,8 +221,9 @@ public:
 			}
 		}
 
-
 		//Zakoñczenie rozgrywki
+		sync_cout << '\n' << GetCurrentTimeTm() << " : " << "Game end.\n";
+		sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Game end.\n";
 		if (!stop) {
 			if (wins[0] == false && wins[1] == false) {
 				sync_cout << GetCurrentTimeTm() << " : " << "Sent message 'GAME DRAW' to all players\n";
@@ -238,16 +246,13 @@ public:
 
 			stop = true;
 			this->sendBinProtocolToAll(BinProtocol(OP_GAME, GAME_END, NULL, NULL));
-			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Game end.\n";
 		}
 		else {
 			this->sendBinProtocolToAll(BinProtocol(OP_MESSAGE, MESSAGE_OPPONENT_DISCONNECTED, NULL, NULL));
 		}
 
 		//£¹czenie w¹tków odbierania
-		for (std::thread& thread : threads) {
-			thread.join();
-			sync_cerr << '\n' << GetCurrentTimeTm() << " : " << "Client connection end.\n";
-		}
+		sync_cout << GetCurrentTimeTm() << " : " << "Waiting for clients to disconnect.\n";
+		for (std::thread& thread : threads) { thread.join(); }
 	}
 };

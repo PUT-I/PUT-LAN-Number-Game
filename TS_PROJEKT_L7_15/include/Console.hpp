@@ -41,7 +41,6 @@ private:
 	}
 
 
-
 	//Checking Keyboard Input ---------------
 	static const bool CHECK_ALT() noexcept { return GetAsyncKeyState(VK_MENU) & 0x8000; }
 	static void CHECK_ALT_F4() noexcept { if (CHECK_ALT() && GetAsyncKeyState(VK_F4) & 0x8000) exit(0); }
@@ -58,7 +57,26 @@ private:
 	}
 
 public:
-	inline static void INPUT_STRING(std::string &str, const unsigned int &limit) {
+	//Czyszczenie konsoli za pomoc¹ funkcji z windows api
+	static void clear_console() noexcept {
+		COORD topLeft = { 0, 0 };
+		HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+		CONSOLE_SCREEN_BUFFER_INFO screen;
+		DWORD written;
+
+		GetConsoleScreenBufferInfo(console, &screen);
+		FillConsoleOutputCharacterA(
+			console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+		);
+		FillConsoleOutputAttribute(
+			console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+			screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+		);
+		SetConsoleCursorPosition(console, topLeft);
+	}
+
+	//Wprowadzanie danych przez u¿ytkownika z ograniczeniem liczby znaków
+	static void input_string(std::string &str, const unsigned int &limit) {
 		while (true) {
 			CURSOR_MOVE(-int(str.size()), 0);
 			sync_cout << str;
