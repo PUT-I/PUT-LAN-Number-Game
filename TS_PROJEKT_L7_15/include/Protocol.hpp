@@ -9,7 +9,7 @@ inline std::ostream& operator << (std::ostream& os, const tm& time) {
 	return os;
 }
 
-inline const tm GetCurrentTimeTm() {
+inline const tm GET_CURRENT_TIME() {
 	time_t tt;
 	time(&tt);
 	tm time;
@@ -67,52 +67,52 @@ public:
 
 
 	//Settery
-	void setOperation(std::string input) {
+	void set_operation(std::string input) {
 		input.resize(3);
 		operation = std::bitset<3>(input);
 	}
 
-	void setAnswer(std::string input) {
+	void set_answer(std::string input) {
 		input.resize(3);
 		answer = std::bitset<3>(input);
 	}
 
-	void setId(std::string input) {
+	void set_id(std::string input) {
 		input.resize(5);
 		id = std::bitset<5>(input);
 	}
-	void setId(const unsigned int& input) { id = std::bitset<5>(input); }
+	void set_id(const unsigned int& input) { id = std::bitset<5>(input); }
 
-	void setData(std::string input) {
+	void set_data(std::string input) {
 		input.resize(8);
 		data = std::bitset<8>(input);
 	}
-	void setData(const unsigned int& input) { data = std::bitset<8>(input); }
+	void set_data(const unsigned int& input) { data = std::bitset<8>(input); }
 
 	void set(const std::string& operation, const std::string& answer, const unsigned int& id, const unsigned int& data) {
-		this->setOperation(operation);
-		this->setAnswer(answer);
-		this->setId(id);
-		this->setData(data);
+		this->set_operation(operation);
+		this->set_answer(answer);
+		this->set_id(id);
+		this->set_data(data);
 	}
 
 
 	//Gettery
-	const std::bitset<3>& getOperation() const { return operation; }
+	const std::bitset<3>& get_operation() const { return operation; }
 
-	const std::bitset<3>& getAnswer() const { return answer; }
+	const std::bitset<3>& get_answer() const { return answer; }
 
-	const std::bitset<5>& getId() const { return id; }
-	const unsigned int getId_Int() const { return id.to_ulong(); }
+	const std::bitset<5>& get_id() const { return id; }
+	const unsigned int get_id_int() const { return id.to_ulong(); }
 
-	const std::bitset<8>& getData() const { return data; }
-	const unsigned int getData_Int() const { return data.to_ulong(); }
+	const std::bitset<8>& get_data() const { return data; }
+	const unsigned int get_data_int() const { return data.to_ulong(); }
 
 	//Porównywanie
 	bool compare(const std::string& operation, const std::string& answer, const unsigned int& id) const {
 		if (this->operation.to_string() != operation) { return false; }
 		if (this->answer.to_string() != answer) { return false; }
-		if (this->getId_Int() != id) { return false; }
+		if (this->get_id_int() != id) { return false; }
 		return true;
 	}
 

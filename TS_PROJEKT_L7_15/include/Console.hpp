@@ -17,8 +17,6 @@ private:
 		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 	}
 
-
-
 	//Funkcje do sprawdzania stanów klawiatury
 	static const bool CHECK_ALT() noexcept { return GetAsyncKeyState(VK_MENU) & 0x8000; }
 	static void CHECK_ALT_F4() noexcept { if (CHECK_ALT() && GetAsyncKeyState(VK_F4) & 0x8000) exit(0); }
