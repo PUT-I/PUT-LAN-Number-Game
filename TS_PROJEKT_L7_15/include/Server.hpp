@@ -18,7 +18,6 @@ inline int randInt(const int &min, const int &max) {
 	return d(gen);
 }
 
-
 class ServerTCP : public NodeTCP {
 private:
 	//Tablica gniazdek po³¹czonych klientów (klucz to id sesji klienta)
@@ -28,7 +27,7 @@ private:
 
 	//Metody prywatne
 	bool socketBind() {
-		if (bind(nodeSocket, (SOCKADDR*)&nodeInfo, sizeof(nodeInfo)) == SOCKET_ERROR) {
+		if (bind(nodeSocket, reinterpret_cast<SOCKADDR*>(&nodeInfo), sizeof(nodeInfo)) == SOCKET_ERROR) {
 			closesocket(nodeSocket);
 			sync_cerr << GetCurrentTimeTm() << " : " << "Socket binding failed with error code : " << WSAGetLastError << '\n';
 			return false;
@@ -144,7 +143,7 @@ public:
 
 		//Odliczanie do pocz¹tku rozgrywki
 		{
-			for (unsigned int i = 10; i > 0; i--) {
+			for (unsigned int i = 30; i > 0; i--) {
 				if (stop) { break; }
 				sync_cerr << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";
 				sync_cout << GetCurrentTimeTm() << " : " << "Time to start: " << i << "s\n";

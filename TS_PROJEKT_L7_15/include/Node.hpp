@@ -28,17 +28,20 @@ public:
 	}
 
 	//Konstruktory
-	NodeTCP() {
-		if (WSAStartup(0x0101, &wsaData) != NO_ERROR) {
+	NodeTCP(): nodeInfo() {
+		if (WSAStartup(0x0101, &wsaData) != NO_ERROR)
+		{
 			sync_cerr << GetCurrentTimeTm() << " : " << "Error creating socket: " << "Initialization error.\n";
 		}
 
 		nodeSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (nodeSocket == INVALID_SOCKET) {
+		if (nodeSocket == INVALID_SOCKET)
+		{
 			sync_cerr << GetCurrentTimeTm() << " : " << "Error creating socket: " << WSAGetLastError() << "\n";
 			WSACleanup();
 		}
 	}
+
 	NodeTCP(const unsigned long& address, const unsigned int& port) : NodeTCP() {
 		this->infoInit(address, port);
 	}
@@ -48,7 +51,7 @@ public:
 	}
 
 	//Metody publiczne
-	void sendBinProtocol(const BinProtocol &data, SOCKET& clientSocket) const {
+	static void sendBinProtocol(const BinProtocol &data, SOCKET& clientSocket) {
 		const std::string sendStr = data.to_string();
 		char sendBuf[BUF_LENGTH];
 		for (unsigned int i = 0; i < BUF_LENGTH; i++) {
@@ -63,7 +66,7 @@ public:
 		sync_cerr << '\n';
 	}
 
-	void receiveBinProtocol(const SOCKET &paramSocket, BinProtocol& output) const {
+	static void receiveBinProtocol(const SOCKET &paramSocket, BinProtocol& output) {
 		int bytesRecv = SOCKET_ERROR;
 		char recvBuf[BUF_LENGTH];
 
