@@ -32,35 +32,35 @@ private:
 
 			//Serwer rozłączony
 			if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
-				if (tempProt.get_data_int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Server disconnected.\n";
-				sync_cerr << GET_CURRENT_TIME() << " : " << "Server disconnected.\n";
+				CONSOLE_MANIP::cursor_set_pos(0, CONSOLE_MANIP::cursor_get_pos().Y);
+				sync_cout << GET_CURRENT_TIME() << " : " << "Server disconnected.       \n";
+				sync_cerr << GET_CURRENT_TIME() << " : " << "Server disconnected.       \n";
 				sync_cout << GET_CURRENT_TIME() << " : " << "Enter anything to exit: ";
 				stop = true;
 			}
 
 			//Przeciwnik rozłączony
 			else if (tempProt.compare(OP_MESSAGE, MESSAGE_OPPONENT_DISCONNECTED, sessionId)) {
-				if (tempProt.get_data_int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Opponent disconnected.\n";
-				sync_cerr << GET_CURRENT_TIME() << " : " << "Opponent disconnected.\n";
+				CONSOLE_MANIP::cursor_set_pos(0, CONSOLE_MANIP::cursor_get_pos().Y);
+				sync_cout << GET_CURRENT_TIME() << " : " << "Opponent disconnected.       \n";
+				sync_cerr << GET_CURRENT_TIME() << " : " << "Opponent disconnected.       \n";
 				sync_cout << GET_CURRENT_TIME() << " : " << "Enter anything to exit: ";
 				stop = true;
 			}
 
 			//Koniec rozgrywki
 			else if (tempProt.compare(OP_GAME, GAME_END, sessionId)) {
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Game end.\n";
-				sync_cerr << GET_CURRENT_TIME() << " : " << "Game end.\n";
+				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Game end.       \n";
+				sync_cerr << GET_CURRENT_TIME() << " : " << "Game end.       \n";
 				sync_cout << GET_CURRENT_TIME() << " : " << "Enter anything to exit: ";
 				stop = true;
 			}
 
 			//Czas do końca
 			else if (tempProt.compare(OP_TIME, TIME_LEFT, sessionId)) {
-				if (tempProt.get_data_int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "TIME LEFT: " << tempProt.get_data_int() << "s\n\n";
-				sync_cerr << GET_CURRENT_TIME() << " : " << "TIME LEFT: " << tempProt.get_data_int() << "s\n\n";
+				CONSOLE_MANIP::cursor_set_pos(0, CONSOLE_MANIP::cursor_get_pos().Y);
+				sync_cout << GET_CURRENT_TIME() << " : " << "TIME LEFT: " << tempProt.get_data_int() << "s       \n\n";
+				sync_cerr << GET_CURRENT_TIME() << " : " << "TIME LEFT: " << tempProt.get_data_int() << "s       \n\n";
 				sync_cout << GET_CURRENT_TIME() << " : " << "Enter number: " << userInput;
 			}
 
@@ -80,22 +80,23 @@ private:
 
 			//Remis
 			else if (tempProt.compare(OP_GAME, GAME_DRAW, sessionId)) {
-				if (tempProt.get_data_int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "NO ONE WON THE GAME.\n";
-				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "NO ONE WON THE GAME.\n";
+				CONSOLE_MANIP::cursor_set_pos(0, CONSOLE_MANIP::cursor_get_pos().Y);
+				sync_cout << GET_CURRENT_TIME() << " : " << "NO ONE WON THE GAME.       \n";
+				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "NO ONE WON THE GAME.       \n";
 			}
 
 			//Wygrana
 			else if (tempProt.compare(OP_GAME, GAME_WON, sessionId)) {
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "YOU WON THE GAME.\n";
-				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "YOU WON THE GAME.\n";
+				CONSOLE_MANIP::cursor_set_pos(0, CONSOLE_MANIP::cursor_get_pos().Y);
+				sync_cout << GET_CURRENT_TIME() << " : " << "YOU WON THE GAME.       \n";
+				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "YOU WON THE GAME.       \n";
 			}
 
 			//Przegrana
 			else if (tempProt.compare(OP_GAME, GAME_LOST, sessionId)) {
-				if (tempProt.get_data_int() != gameDuration) { sync_cout << " INTERRUPTED"; }
-				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "YOU LOST THE GAME.\n";
-				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "YOU LOST THE GAME.\n";
+				CONSOLE_MANIP::cursor_set_pos(0, CONSOLE_MANIP::cursor_get_pos().Y);
+				sync_cout << GET_CURRENT_TIME() << " : " << "YOU LOST THE GAME.       \n";
+				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "YOU LOST THE GAME.       \n";
 			}
 		}
 	}
@@ -126,6 +127,7 @@ public:
 	}
 
 	void start_game() {
+		CONSOLE_MANIP::show_console_cursor(false);
 		BinProtocol tempProt;
 
 		//Czekanie na uzyskanie informacji o czasie rozgrywki
@@ -178,15 +180,15 @@ public:
 
 			//Serwer rozłączony
 			else if (tempProt.compare(OP_MESSAGE, MESSAGE_SENDER_DISCONNECTED, NULL)) {
-				sync_cout << GET_CURRENT_TIME() << " : " << "Server disconnected.\n";
-				sync_cerr << GET_CURRENT_TIME() << " : " << "Server disconnected.\n";
+				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Server disconnected.\n";
+				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "Server disconnected.\n";
 				return;
 			}
 
 			//Przeciwnik rozłączony
 			else if (tempProt.compare(OP_MESSAGE, MESSAGE_OPPONENT_DISCONNECTED, sessionId)) {
-				sync_cout << GET_CURRENT_TIME() << " : " << "Opponent disconnected.\n";
-				sync_cerr << GET_CURRENT_TIME() << " : " << "Opponent disconnected.\n";
+				sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Opponent disconnected.\n";
+				sync_cerr << '\n' << GET_CURRENT_TIME() << " : " << "Opponent disconnected.\n";
 				return;
 			}
 		}
@@ -205,7 +207,7 @@ public:
 			//Podawanie liczby
 			while (!stop) {
 				//Ograniczone wprowadzanie danych
-				CONSOLE_MANIP::input_string(userInput, 3);
+				CONSOLE_MANIP::input_string_digits(userInput, 3);
 				if (stop) { break; }
 
 				//Sprawdzanie czy wprowadzono właściwe dane

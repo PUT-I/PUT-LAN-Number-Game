@@ -21,14 +21,49 @@ private:
 	static const bool CHECK_ALT() noexcept { return GetAsyncKeyState(VK_MENU) & 0x8000; }
 	static void CHECK_ALT_F4() noexcept { if (CHECK_ALT() && GetAsyncKeyState(VK_F4) & 0x8000) exit(0); }
 	static const bool CHECK_OTHER_THAN_NUM(const char& c) {
-		if (c >= 0x00 && c <= 0x2f) { return true; }
-		//Zakres liczb
-		else if (c >= 0x30 && c <= 0x39) { return false; }
-		else if (c >= 0x3A && c <= 0x40) { return true; }
-		//Zakres znaków
-		else if (c >= 0x41 && c <= 0x5A) { return true; }
-		else if (c >= 0x5b) { return true; }
-		return false;
+		if (c >= '0' && c <= '9') { return false; }
+		return true;
+	}
+	static const bool CHECK_OTHER_THAN_ALF(const char& c) {
+		if (c >= 'A' && c <= 'Z') { return false; }
+		else if (c >= 'a' && c <= 'z') { return false; }
+		return true;
+	}
+	static const bool CHECK_OTHER_THAN_ALF_Y_N(const char& c) {
+		if (c == 'N' || c == 'n') { return false; }
+		else if (c == 'Y' || c == 'y') { return false; }
+		return true;
+	}
+	//Wprowadzanie danych przez u¿ytkownika z ograniczeniem liczby znaków
+	static void input_string(std::string &str, const unsigned int &limit, const bool(*check_function)(const char&)) {
+		while (true) {
+			cursor_move(-int(str.size()), 0);
+			sync_cout << str;
+
+			show_console_cursor(true);
+			const char c = _getch();
+			show_console_cursor(false);
+
+			CHECK_ALT_F4();
+
+			if (c == 0x0d) { break; }
+			else if (c == 0x08) {	//Jeœli wprowadzono backspace
+				if (str.size() > 0) {
+					cursor_move(-1, 0);
+					sync_cout << ' ';
+					cursor_move(-1, 0);
+					str.pop_back();
+				}
+			}
+			else if (check_function(c)) { continue; }
+			else if (c >= '0' && c <= '9' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') {
+				if (str.size() < limit) {
+					cursor_move(1, 0);
+					str += c;
+				}
+			}
+		}
+		show_console_cursor(true);
 	}
 
 public:
@@ -76,35 +111,15 @@ public:
 		SetConsoleCursorPosition(console, topLeft);
 	}
 
+	
 	//Wprowadzanie danych przez u¿ytkownika z ograniczeniem liczby znaków
-	static void input_string(std::string &str, const unsigned int &limit) {
-		while (true) {
-			cursor_move(-int(str.size()), 0);
-			sync_cout << str;
-
-			show_console_cursor(true);
-			const char c = _getch();
-			if (str.size() != limit) { show_console_cursor(false); }
-
-			CHECK_ALT_F4();
-
-			if (c == 0x0d) { break; }
-			else if (c == 0x08) {	//Jeœli wprowadzono backspace
-				if (str.size() > 0) {
-					cursor_move(-1, 0);
-					sync_cout << ' ';
-					cursor_move(-1, 0);
-					str.pop_back();
-				}
-			}
-			else if (CHECK_OTHER_THAN_NUM(c)) { continue; }
-			else if (c >= '0' && c <= '9' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') {
-				if (str.size() < limit) {
-					cursor_move(1, 0);
-					str += c;
-				}
-			}
-		}
-		show_console_cursor(true);
+	static void input_string_digits(std::string &str, const unsigned int &limit){
+		input_string(str, limit, &CHECK_OTHER_THAN_NUM);
+	}
+	static void input_string_letters(std::string &str, const unsigned int &limit){
+		input_string(str, limit, &CHECK_OTHER_THAN_ALF);
+	}
+	static void input_string_letters_y_n(std::string &str, const unsigned int &limit) {
+		input_string(str, limit, &CHECK_OTHER_THAN_ALF_Y_N);
 	}
 };
