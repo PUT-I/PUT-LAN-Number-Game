@@ -20,7 +20,7 @@ inline int randInt(const int &min, const int &max) {
 
 class ServerTCP : public NodeTCP {
 private:
-	static const unsigned int timeToStart = 5;
+	static const unsigned int timeToStart = 30;
 	//Tablica gniazdek po³¹czonych klientów (klucz to id sesji klienta)
 	std::unordered_map<unsigned int, SOCKET>clientSockets;
 	//Tablica id sesji poszczególnych klientów liczonych od 0

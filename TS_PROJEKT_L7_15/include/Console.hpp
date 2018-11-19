@@ -111,7 +111,6 @@ public:
 		SetConsoleCursorPosition(console, topLeft);
 	}
 
-	
 	//Wprowadzanie danych przez u¿ytkownika z ograniczeniem liczby znaków
 	static void input_string_digits(std::string &str, const unsigned int &limit){
 		input_string(str, limit, &CHECK_OTHER_THAN_NUM);
