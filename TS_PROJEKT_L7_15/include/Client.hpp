@@ -117,6 +117,8 @@ private:
 		}
 	}
 
+	//Rozłączanie się z serwerem
+
 	//Konstruktory
 public:
 	ClientTCP(const unsigned long& address, const unsigned int& port) : NodeTCP(address, port) {}
@@ -252,6 +254,8 @@ public:
 
 		//Zakończenie rozgrywki, rozłączenie z serwerem
 		listener.join();
-		shutdown(nodeSocket, 2);
+		closesocket(nodeSocket);
+		WSACleanup();
+		sync_cout << '\n' << GET_CURRENT_TIME() << " : " << "Connection closed.\n";
 	}
 };
