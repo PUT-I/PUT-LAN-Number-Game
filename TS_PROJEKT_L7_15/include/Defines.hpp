@@ -41,7 +41,7 @@
 
 #define MESSAGE_SENDER_DISCONNECTED   "000" //Nadawca roz³¹czony
 #define MESSAGE_OPPONENT_DISCONNECTED "001" //Przecwnik roz³¹czony
-#define MESSAGE_WAITING_FOR_OPPONENT  "001" //Przecwnik roz³¹czony
+#define MESSAGE_WAITING_FOR_OPPONENT  "010" //Czekanie na przeciwnika
 
 
 //Rozgrywka
