@@ -9,14 +9,6 @@ private:
 		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 	}
 
-	static void cursor_move(const int& movX, const int& movY) noexcept {
-		COORD c = cursor_get_pos();
-		c.X += movX;
-		c.Y += movY;
-
-		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
-	}
-
 	//Funkcje do sprawdzania stanów klawiatury
 	static const bool CHECK_ALT() noexcept { return GetAsyncKeyState(VK_MENU) & 0x8000; }
 	static void CHECK_ALT_F4() noexcept { if (CHECK_ALT() && GetAsyncKeyState(VK_F4) & 0x8000) exit(0); }
@@ -67,6 +59,14 @@ private:
 	}
 
 public:
+	static void cursor_move(const int& movX, const int& movY) noexcept {
+		COORD c = cursor_get_pos();
+		c.X += movX;
+		c.Y += movY;
+
+		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
+	}
+
 	//Ustawianie widocznoœci kursora
 	static void show_console_cursor(const bool &showFlag) noexcept {
 		HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);

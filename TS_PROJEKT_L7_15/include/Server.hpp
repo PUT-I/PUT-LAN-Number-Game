@@ -20,6 +20,7 @@ inline int randInt(const int &min, const int &max) {
 
 class ServerTCP : public NodeTCP {
 private:
+	static const unsigned int timeToStart = 5;
 	//Tablica gniazdek po³¹czonych klientów (klucz to id sesji klienta)
 	std::unordered_map<unsigned int, SOCKET>clientSockets;
 	//Tablica id sesji poszczególnych klientów liczonych od 0
@@ -143,7 +144,7 @@ public:
 
 		//Odliczanie do pocz¹tku rozgrywki
 		{
-			for (unsigned int i = 30; i > 0; i--) {
+			for (unsigned int i = timeToStart; i > 0; i--) {
 				if (stop) { break; }
 				sync_cerr << GET_CURRENT_TIME() << " : " << "Time to start: " << i << "s\n";
 				sync_cout << GET_CURRENT_TIME() << " : " << "Time to start: " << i << "s\n";
