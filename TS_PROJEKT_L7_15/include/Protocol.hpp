@@ -29,31 +29,33 @@ private:
 
 public: static const unsigned int length = 3; //D³ugoœæ protoko³u w bajtach
 private:
-	//Desetializacja ca³ego ci¹gu bitów na poszczególne pola
-	void deserialize(const std::bitset<length * 8>& wholeData) {
+	//Deserializacja ca³ego ci¹gu bitów na poszczególne pola
+	void deserialize(std::bitset<length * 8> &wholeData) {
+		const int start = length * 8 - 1;
+
 		//Pole operacji
-		int startOffset = 1;
-		int endOffset = operation.size();
-		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { operation[i - (length * 8 - endOffset)] = wholeData[i]; }
+		int end = start - operation.size();
+		for (int i = start; i > end; i--) { operation[i - end - 1] = wholeData[i]; }
 
 		//Pole odpowiedzi
-		startOffset += operation.size();
-		endOffset = startOffset + answer.size() - 1;
-		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { answer[i - (length * 8 - endOffset)] = wholeData[i]; }
+		wholeData <<= operation.size();
+		end = start - answer.size();
+		for (int i = start; i > end; i--) { answer[i - end - 1] = wholeData[i]; }
 
 		//Pole identyfikatora sesji
-		startOffset += answer.size();
-		endOffset = startOffset + id.size() - 1;
-		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { id[i - (length * 8 - endOffset)] = wholeData[i]; }
+		wholeData <<= answer.size();
+		end = start - id.size();
+		for (int i = start; i > end; i--) { id[i - end - 1] = wholeData[i]; }
 
 		//Pole danych
-		startOffset += id.size();
-		endOffset = startOffset + data.size() - 1;
-		for (int i = length * 8 - startOffset; i >= int(length * 8 - endOffset); i--) { data[i - (length * 8 - endOffset)] = wholeData[i]; }
+		wholeData <<= id.size();
+		end = start - data.size();
+		for (int i = start; i > end; i--) { data[i - end - 1] = wholeData[i]; }
 
 		//Pole dope³nienia
-		startOffset += data.size();
-		for (int i = length * 8 - startOffset; i >= 0; i--) { padding[i] = wholeData[i]; }
+		wholeData <<= data.size();
+		end = start - padding.size();
+		for (int i = start; i > end; i--) { padding[i - end - 1] = wholeData[i]; }
 	}
 
 public:
@@ -130,7 +132,7 @@ public:
 	}
 
 	//Deserializacja
-	void from_char_a(const char* input) { 
+	void from_char_a(const char* input) {
 		std::bitset<length * 8>wholeData;
 		for (unsigned int i = 0; i < length; i++) {
 			std::bitset<8>tempBitset(input[i]);
