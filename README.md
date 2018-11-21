@@ -2,20 +2,20 @@
 University project concerning web protocols.
 
 ## Protocol Description
-### Protocol field:
+### Protocol Fields:
   - Operation (3 bit)
   - Answer (3 bit)
   - Session identificator (5 bit)
   - Data (8 bit)
   - Padding (5 bit)
 
-### Protocol structure:
+### Protocol Structure:
 <pre>
 Byte  : 0              |1                    |2
 Bit   : 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
 Field : Op   |Answ |Session Id|Data                   |Padding
 </pre>
-### Operation and answer codes:
+### Operation And Answer Codes:
   -	000 – message:
     -	000 – sender disconnected (receiving error)
     -	001 – opponent disconnected
