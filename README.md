@@ -3,15 +3,15 @@ University project concerning web protocols.
 
 ## Protocol Description
 ### Protocol field:
-  - Operation
-  - Answer
-  - Session identificator
-  - Data
-  - Padding
+  - Operation (3 bit)
+  - Answer (3 bit)
+  - Session identificator (5 bit)
+  - Data (8 bit)
+  - Padding (5 bit)
 
 ### Protocol structure:
 <pre>
-Byte  : 0	             |1	                   |2
+Byte  : 0              |1                    |2
 Bit   : 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
 Field : Op   |Answ |Session Id|Data                   |Padding
 </pre>
