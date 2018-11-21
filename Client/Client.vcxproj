@@ -173,9 +173,6 @@
   <ItemGroup>
     <ClCompile Include="ClientInstance.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="NieMoje.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

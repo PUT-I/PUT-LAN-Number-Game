@@ -17,6 +17,7 @@ private:
 	bool input_check(const std::string& input) const {
 		if (input.find_first_not_of("0123456789") != std::string::npos) { return false; }
 		else {
+			inet_ntoa();
 			const int numberCheck = std::stoi(input);
 			//Czy dodatnia i mniejsza niż zakres
 			if (numberCheck < 0 || numberCheck > int(pow(2, 8) - 1)) { return false; }
