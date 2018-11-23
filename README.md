@@ -1,5 +1,6 @@
 # TS_PROJEKT_L7_15
-University project concerning web protocols.
+University project concerning binary web protocols.
+It is a number guessing game with one server and two players. Server generates number (0-255), players are trying to guess that number.
 
 ## Protocol Description
 ### Protocol Fields:
@@ -11,9 +12,9 @@ University project concerning web protocols.
 
 ### Protocol Structure:
 <pre>
-Byte  : 0              |1                    |2
-Bit   : 0 1 2 3 4 5 6 7|8 9 10 11 12 13 14 15|16 17 18 19 20 21 22 23
-Field : Op   |Answ |Session Id|Data          |        |Padding
+Byte  : 0                      |1                      |2
+Bit   : 00 01 02|03 04 05|06 07 08 09 10|11 12 13 14 15 16 17 18|19 20 21 22 23
+Field : Operat  |Answer  |Session Id    |Data                   |Padding
 </pre>
 ### Operation And Answer Codes:
   -	000 – message:
