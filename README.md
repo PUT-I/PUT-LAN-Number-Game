@@ -1,4 +1,4 @@
-# NT_PROJECT_L7_15
+# LAN Number Game
 University project concerning binary web protocols.
 It is a number guessing game with one server and two players. Server generates number (0-255), players are trying to guess that number.
 
